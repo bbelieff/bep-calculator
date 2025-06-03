@@ -5,7 +5,7 @@ export const calculateTotalSales = (categories: MenuCategory[]): number => {
   return categories.reduce((total, category) => {
     return (
       total +
-      category.items.reduce((categoryTotal, item) => {
+      (category.items ?? []).reduce((categoryTotal, item) => {
         return categoryTotal + item.price * item.quantity;
       }, 0)
     );
@@ -16,7 +16,7 @@ export const calculateTotalCosts = (categories: MenuCategory[]): number => {
   return categories.reduce((total, category) => {
     return (
       total +
-      category.items.reduce((categoryTotal, item) => {
+      (category.items ?? []).reduce((categoryTotal, item) => {
         return categoryTotal + item.cost * item.quantity;
       }, 0)
     );

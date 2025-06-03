@@ -80,10 +80,10 @@ export default function RestaurantBEPCalculator() {
         const data = await loadLatestBEPData()
         if (data) {
           setRestaurantName(data.restaurantName)
-          setCategories(data.categories)
-          setDepreciationItems(data.depreciationItems)
-          setMarketingCosts(data.marketingCosts)
-          setLastSavedAt(new Date(data.updatedAt))
+          setCategories(data.categories ?? [])
+          setDepreciationItems(data.depreciationItems ?? [])
+          setMarketingCosts(data.marketingCosts ?? [])
+          setLastSavedAt(new Date(data.savedAt || data.updatedAt))
         }
       } catch (error) {
         setAlerts(prev => [
@@ -112,10 +112,10 @@ export default function RestaurantBEPCalculator() {
     setIsEditingRestaurantName(false)
   }
 
-  const totalSales = calculateTotalSales(categories)
-  const totalCosts = calculateTotalCosts(categories)
-  const monthlyDepreciation = calculateMonthlyDepreciation(depreciationItems)
-  const monthlyMarketingCosts = calculateMonthlyMarketingCosts(marketingCosts)
+  const totalSales = calculateTotalSales(categories ?? [])
+  const totalCosts = calculateTotalCosts(categories ?? [])
+  const monthlyDepreciation = calculateMonthlyDepreciation(depreciationItems ?? [])
+  const monthlyMarketingCosts = calculateMonthlyMarketingCosts(marketingCosts ?? [])
   const breakEvenPoint = calculateBreakEvenPoint(
     totalSales,
     totalCosts,

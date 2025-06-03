@@ -236,15 +236,15 @@ export default function RestaurantBEPCalculator() {
 
   const [newMenuItem, setNewMenuItem] = useState({
     name: "",
-    price: "",
-    cost: "",
-    costInputType: "amount" | "rate",
-    costRate: "",
+    price: 0,
+    cost: 0,
+    costInputType: "amount" as "amount" | "rate",
+    costRate: 0,
     discountEnabled: false,
     discountDays: [] as string[],
     discountType: "amount" as "rate" | "amount",
-    discountRate: "",
-    discountAmount: "",
+    discountRate: 0,
+    discountAmount: 0,
   })
 
   const [fixedCosts, setFixedCosts] = useState<FixedCosts>(initialFixedCosts)
@@ -485,23 +485,19 @@ export default function RestaurantBEPCalculator() {
 
   const calculateCostAndMargin = useCallback(
     (
-      item: Omit<MenuItem, "id" | "margin" | "price" | "cost" | "discountAmount"> & {
-        price: string
-        cost: string
-        discountAmount: string
-      },
+      item: Omit<MenuItem, "id" | "margin"> & { price: number; cost: number; discountAmount: number },
       newPriceValue?: number,
       newCostAmountValue?: number,
       newCostRateValue?: number,
       newCostInputType?: "amount" | "rate",
     ) => {
-      const price = newPriceValue !== undefined ? newPriceValue : parseInputAsNumber(item.price)
+      const price = newPriceValue !== undefined ? newPriceValue : item.price
       const costInputType = newCostInputType !== undefined ? newCostInputType : item.costInputType
       let cost: number
       if (costInputType === "amount") {
-        cost = newCostAmountValue !== undefined ? newCostAmountValue : parseInputAsNumber(item.cost)
+        cost = newCostAmountValue !== undefined ? newCostAmountValue : item.cost
       } else {
-        const costRate = newCostRateValue !== undefined ? newCostRateValue : parseInputAsNumber(item.costRate)
+        const costRate = newCostRateValue !== undefined ? newCostRateValue : item.costRate
         cost = price * (costRate / 100)
       }
       const margin = price > 0 ? ((price - cost) / price) * 100 : 0
@@ -512,7 +508,7 @@ export default function RestaurantBEPCalculator() {
           costInputType === "rate"
             ? newCostRateValue !== undefined
               ? newCostRateValue
-              : parseInputAsNumber(item.costRate)
+              : item.costRate
             : price > 0
               ? Number.parseFloat(((cost / price) * 100).toFixed(2))
               : 0,
@@ -528,12 +524,12 @@ export default function RestaurantBEPCalculator() {
       alert("메뉴명과 판매가격을 입력해주세요.")
       return
     }
-    const priceValue = parseInputAsNumber(newMenuItem.price) * 1000
+    const priceValue = newMenuItem.price * 1000
     const { cost, margin, costRate, costInputType } = calculateCostAndMargin(
-      { ...newMenuItem, price: priceValue.toString() },
+      { ...newMenuItem, price: priceValue, cost: newMenuItem.cost },
       priceValue,
-      newMenuItem.costInputType === "amount" ? parseInputAsNumber(newMenuItem.cost) * 1000 : undefined,
-      newMenuItem.costInputType === "rate" ? parseInputAsNumber(newMenuItem.costRate) : undefined,
+      newMenuItem.costInputType === "amount" ? newMenuItem.cost * 1000 : undefined,
+      newMenuItem.costInputType === "rate" ? newMenuItem.costRate : undefined,
       newMenuItem.costInputType,
     )
     const item: MenuItem = {
@@ -547,21 +543,21 @@ export default function RestaurantBEPCalculator() {
       discountEnabled: newMenuItem.discountEnabled,
       discountDays: newMenuItem.discountDays,
       discountType: newMenuItem.discountType,
-      discountRate: parseInputAsNumber(newMenuItem.discountRate),
-      discountAmount: parseInputAsNumber(newMenuItem.discountAmount) * 1000,
+      discountRate: newMenuItem.discountRate,
+      discountAmount: newMenuItem.discountAmount * 1000,
     }
     setMenuItems([...menuItems, item])
     setNewMenuItem({
       name: "",
-      price: "",
-      cost: "",
+      price: 0,
+      cost: 0,
       costInputType: "amount",
-      costRate: "",
+      costRate: 0,
       discountEnabled: false,
       discountDays: [],
       discountType: "amount",
-      discountRate: "",
-      discountAmount: "",
+      discountRate: 0,
+      discountAmount: 0,
     })
   }
 
@@ -585,10 +581,10 @@ export default function RestaurantBEPCalculator() {
     const { cost, margin, costRate, costInputType } = calculateCostAndMargin(
       {
         ...editMenuItem,
-        price: editMenuItem.price.toString(),
-        cost: editMenuItem.cost.toString(),
-        costRate: editMenuItem.costRate.toString(),
-        discountAmount: editMenuItem.discountAmount.toString(),
+        price: priceValue,
+        cost: editMenuItem.cost,
+        costRate: editMenuItem.costRate,
+        discountAmount: editMenuItem.discountAmount,
       },
       priceValue,
       editMenuItem.costInputType === "amount" ? editMenuItem.cost : undefined,
@@ -1432,7 +1428,7 @@ export default function RestaurantBEPCalculator() {
       return {
         ...item,
         cost: Number.parseFloat(newCost.toFixed(2)),
-        costInputType: "amount",
+        costInputType: "amount" as "amount" | "rate",
         costRate: item.price > 0 ? Number.parseFloat(((newCost / item.price) * 100).toFixed(2)) : 0,
         margin: marginRate,
       }
@@ -1594,8 +1590,8 @@ export default function RestaurantBEPCalculator() {
                   <Input
                     id="menu-price"
                     type="number"
-                    value={newMenuItem.price}
-                    onChange={(e) => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
+                    value={newMenuItem.price === 0 ? "" : newMenuItem.price}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, price: Number(e.target.value) })}
                     placeholder="예: 29"
                     step="0.1"
                   />
@@ -1609,8 +1605,8 @@ export default function RestaurantBEPCalculator() {
                       setNewMenuItem((prev) => ({
                         ...prev,
                         costInputType: e.target.value as "amount" | "rate",
-                        cost: "",
-                        costRate: "",
+                        cost: 0,
+                        costRate: 0,
                       }))
                     }
                     className="w-full p-2 border rounded-md mt-1 text-sm h-10"
@@ -1625,8 +1621,8 @@ export default function RestaurantBEPCalculator() {
                     <Input
                       id="menu-cost-amount"
                       type="number"
-                      value={newMenuItem.cost}
-                      onChange={(e) => setNewMenuItem({ ...newMenuItem, cost: e.target.value })}
+                      value={newMenuItem.cost === 0 ? "" : newMenuItem.cost}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, cost: Number(e.target.value) })}
                       placeholder="예: 14.5"
                       step="0.1"
                     />
@@ -1637,8 +1633,8 @@ export default function RestaurantBEPCalculator() {
                     <Input
                       id="menu-cost-rate"
                       type="number"
-                      value={newMenuItem.costRate}
-                      onChange={(e) => setNewMenuItem({ ...newMenuItem, costRate: e.target.value })}
+                      value={newMenuItem.costRate === 0 ? "" : newMenuItem.costRate}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, costRate: Number(e.target.value) })}
                       placeholder="예: 50"
                     />
                   </div>
@@ -1675,11 +1671,11 @@ export default function RestaurantBEPCalculator() {
                     value={newMenuItem.discountType === "rate" ? newMenuItem.discountRate : newMenuItem.discountAmount}
                     onChange={(e) =>
                       newMenuItem.discountType === "rate"
-                        ? setNewMenuItem({ ...newMenuItem, discountRate: e.target.value })
-                        : setNewMenuItem({ ...newMenuItem, discountAmount: e.target.value })
+                        ? setNewMenuItem({ ...newMenuItem, discountRate: Number(e.target.value) })
+                        : setNewMenuItem({ ...newMenuItem, discountAmount: Number(e.target.value) })
                     }
                     placeholder={newMenuItem.discountType === "rate" ? "예: 10" : "예: 5"}
-                    disabled={newMenuItem.discountEnabled}
+                    disabled={!newMenuItem.discountEnabled}
                     step={newMenuItem.discountType === "amount" ? "0.1" : "1"}
                   />
                 </div>
@@ -2171,7 +2167,7 @@ export default function RestaurantBEPCalculator() {
                                 (categoryConfig && isDefaultRemovable && categoryConfig.key !== "depreciation")) && (
                                 <Button
                                   variant="ghost"
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => removeFixedCategory(categoryKey)}
                                   className="text-red-500 p-1 h-auto"
                                 >
@@ -2398,7 +2394,7 @@ export default function RestaurantBEPCalculator() {
                               {(isCustomRemovable || (categoryConfig && isDefaultRemovable)) && (
                                 <Button
                                   variant="ghost"
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => removeVariableCategory(categoryKey)}
                                   className="text-red-500 p-1 h-auto"
                                 >

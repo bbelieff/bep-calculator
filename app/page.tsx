@@ -119,10 +119,33 @@ export default function RestaurantBEPCalculator() {
         const data = await loadLatestBEPData()
         console.log("Supabase data:", data)
         if (data) {
-          setRestaurantName(data.name || data.restaurantName)
-          setCategories(Array.isArray(data.categories) ? data.categories : [])
-          setDepreciationItems(Array.isArray(data.depreciationItems) ? data.depreciationItems : [])
-          setMarketingCosts(Array.isArray(data.marketingCosts) ? data.marketingCosts : [])
+          setRestaurantName(
+            (data.data && (data.data.restaurantName || data.data.name)) ||
+            data.restaurantName ||
+            data.name ||
+            "식당 BEP 계산기"
+          )
+          setCategories(
+            Array.isArray(data.data?.categories)
+              ? data.data.categories
+              : Array.isArray(data.categories)
+              ? data.categories
+              : []
+          )
+          setDepreciationItems(
+            Array.isArray(data.data?.depreciationItems)
+              ? data.data.depreciationItems
+              : Array.isArray(data.depreciationItems)
+              ? data.depreciationItems
+              : []
+          )
+          setMarketingCosts(
+            Array.isArray(data.data?.marketingCosts)
+              ? data.data.marketingCosts
+              : Array.isArray(data.marketingCosts)
+              ? data.marketingCosts
+              : []
+          )
           let lastSaved = null;
           const innerData = data.data || {};
           if (innerData.savedAt && !isNaN(Date.parse(innerData.savedAt))) {

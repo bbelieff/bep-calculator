@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Plus, Trash2, Save, Download, Upload, Edit3, X } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay } from "date-fns"
 import { ko } from "date-fns/locale"
-import saveAs from "file-saver"
+import { saveAs } from "file-saver"
 import { calculateFixedCost, calculatePension, calculateHealth, calculateCare, calculateEmployment, calculateAccident, calculateRetirement } from "@/lib/bep"
 import { loadLatestBEPData, saveBEPData, listSavedBEPData } from "@/lib/db"
 

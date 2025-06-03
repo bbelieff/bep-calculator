@@ -119,11 +119,21 @@ export default function RestaurantBEPCalculator() {
         const data = await loadLatestBEPData()
         console.log("Supabase data:", data)
         if (data) {
-          setRestaurantName(data.restaurantName)
+          setRestaurantName(data.name || data.restaurantName)
           setCategories(Array.isArray(data.categories) ? data.categories : [])
           setDepreciationItems(Array.isArray(data.depreciationItems) ? data.depreciationItems : [])
           setMarketingCosts(Array.isArray(data.marketingCosts) ? data.marketingCosts : [])
-          setLastSavedAt(new Date(data.savedAt || data.updatedAt))
+          let lastSaved = null;
+          if (data.savedAt && !isNaN(Date.parse(data.savedAt))) {
+            lastSaved = new Date(data.savedAt);
+          } else if (data.updatedAt && !isNaN(Date.parse(data.updatedAt))) {
+            lastSaved = new Date(data.updatedAt);
+          } else if (data.created_at && !isNaN(Date.parse(data.created_at))) {
+            lastSaved = new Date(data.created_at);
+          } else {
+            lastSaved = null;
+          }
+          setLastSavedAt(lastSaved)
         }
       } catch (error) {
         setAlerts(prev => [
@@ -186,7 +196,7 @@ export default function RestaurantBEPCalculator() {
             {restaurantName}
           </h1>
         )}
-        {lastSavedAt && (
+        {lastSavedAt && !isNaN(lastSavedAt.getTime()) && (
           <span className="text-sm text-gray-500">
             마지막 저장: {format(lastSavedAt, "yyyy-MM-dd HH:mm:ss")}
           </span>

@@ -124,7 +124,12 @@ export default function RestaurantBEPCalculator() {
           setDepreciationItems(Array.isArray(data.depreciationItems) ? data.depreciationItems : [])
           setMarketingCosts(Array.isArray(data.marketingCosts) ? data.marketingCosts : [])
           let lastSaved = null;
-          if (data.savedAt && !isNaN(Date.parse(data.savedAt))) {
+          const innerData = data.data || {};
+          if (innerData.savedAt && !isNaN(Date.parse(innerData.savedAt))) {
+            lastSaved = new Date(innerData.savedAt);
+          } else if (innerData.updatedAt && !isNaN(Date.parse(innerData.updatedAt))) {
+            lastSaved = new Date(innerData.updatedAt);
+          } else if (data.savedAt && !isNaN(Date.parse(data.savedAt))) {
             lastSaved = new Date(data.savedAt);
           } else if (data.updatedAt && !isNaN(Date.parse(data.updatedAt))) {
             lastSaved = new Date(data.updatedAt);

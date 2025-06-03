@@ -24,17 +24,17 @@ export const calculateTotalCosts = (categories: MenuCategory[]): number => {
 };
 
 export const calculateMonthlyDepreciation = (
-  items: DepreciationItem[]
+  items: DepreciationItem[] = []
 ): number => {
-  return items.reduce((total, item) => {
+  return (items ?? []).reduce((total, item) => {
     return total + item.amount / item.months;
   }, 0);
 };
 
 export const calculateMonthlyMarketingCosts = (
-  items: MarketingCost[]
+  items: MarketingCost[] = []
 ): number => {
-  return items.reduce((total, item) => {
+  return (items ?? []).reduce((total, item) => {
     return total + item.amount / item.months;
   }, 0);
 };

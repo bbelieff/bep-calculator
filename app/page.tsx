@@ -2248,14 +2248,14 @@ export default function RestaurantBEPCalculator() {
                                   <div className="flex gap-1">
                                     <Button
                                       variant="outline"
-                                      size="xs"
+                                      size="sm"
                                       onClick={() => startEditCost(item, categoryKey, "fixed")}
                                     >
                                       <Edit3 className="h-3 w-3" />
                                     </Button>
                                     <Button
                                       variant="destructive"
-                                      size="xs"
+                                      size="sm"
                                       onClick={() => removeFixedCostItem(categoryKey, item.id)}
                                     >
                                       <Trash2 className="h-3 w-3" />
@@ -2488,14 +2488,14 @@ export default function RestaurantBEPCalculator() {
                                   <div className="flex gap-1">
                                     <Button
                                       variant="outline"
-                                      size="xs"
+                                      size="sm"
                                       onClick={() => startEditCost(item, categoryKey, "variable")}
                                     >
                                       <Edit3 className="h-3 w-3" />
                                     </Button>
                                     <Button
                                       variant="destructive"
-                                      size="xs"
+                                      size="sm"
                                       onClick={() => removeVariableCostItem(categoryKey, item.id)}
                                     >
                                       <Trash2 className="h-3 w-3" />
@@ -2650,7 +2650,7 @@ export default function RestaurantBEPCalculator() {
                         {cost.startDate} ~ {cost.endDate}
                       </p>
                     </div>
-                    <Button variant="destructive" size="xs" onClick={() => removeMarketingCost(cost.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => removeMarketingCost(cost.id)}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -2909,7 +2909,7 @@ export default function RestaurantBEPCalculator() {
                   <div className="p-3 bg-purple-100 rounded-lg">
                     총 마케팅비:{" "}
                     <span className="font-bold">
-                      {formatNumberForDisplay(calculatedMonthlyAnalysisData.totalMarketingCosts, "원")}
+                      {formatNumberForDisplay(getCurrentMonthMarketingCosts(), "원")}
                     </span>
                   </div>
                 </div>

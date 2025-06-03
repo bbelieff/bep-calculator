@@ -21,9 +21,9 @@ export async function saveBEPData(name: string, data: object) {
   const { error } = await supabase.from("bep_data").insert([{ name, data }])
   if (error) {
     console.error("❌ 저장 실패:", error)
-    alert("저장 실패: " + error.message)
+    // alert("저장 실패: " + error.message)
   } else {
-    alert("✅ Supabase 저장 완료!")
+    // alert("✅ Supabase 저장 완료!")
   }
 }
 

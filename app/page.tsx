@@ -13,7 +13,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMont
 import { ko } from "date-fns/locale"
 import { MenuManagement } from "@/components/restaurant/MenuManagement"
 import { CostManagement } from "@/components/restaurant/CostManagement"
-import { MenuCategory } from "@/types/menu"
+import { MenuCategory, MenuItem } from "@/types/menu"
 import { DepreciationItem, MarketingCost } from "@/types/cost"
 import { Alert } from "@/types/restaurant"
 import { calculateTotalSales, calculateTotalCosts, calculateMonthlyDepreciation, calculateMonthlyMarketingCosts, calculateBreakEvenPoint } from "@/utils/calculations"
@@ -34,10 +34,49 @@ export default function RestaurantBEPCalculator() {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
 
   const [categories, setCategories] = useState<MenuCategory[]>([])
+  const [newMenuItem, setNewMenuItemState] = useState<MenuItem>({
+    id: '',
+    name: '',
+    price: 0,
+    cost: 0,
+    quantity: 0,
+    category: '',
+    isNew: true,
+  })
+  const [isAddingNewItem, setIsAddingNewItem] = useState(false)
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [depreciationItems, setDepreciationItems] = useState<DepreciationItem[]>([])
   const [marketingCosts, setMarketingCosts] = useState<MarketingCost[]>([])
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [showAlerts, setShowAlerts] = useState<boolean>(true)
+  const [newDepreciationItem, setNewDepreciationItemState] = useState<DepreciationItem>({
+    id: '',
+    name: '',
+    amount: 0,
+    months: 0,
+    startDate: new Date().toISOString().split('T')[0],
+  })
+  const [newMarketingCost, setNewMarketingCostState] = useState<MarketingCost>({
+    id: '',
+    name: '',
+    amount: 0,
+    months: 0,
+    startDate: new Date().toISOString().split('T')[0],
+  })
+  const [isAddingDepreciation, setIsAddingDepreciation] = useState(false)
+  const [isAddingMarketing, setIsAddingMarketing] = useState(false)
+  const [editingDepreciation, setEditingDepreciation] = useState<DepreciationItem | null>(null)
+  const [editingMarketing, setEditingMarketing] = useState<MarketingCost | null>(null)
+
+  const setNewMenuItem = (updates: Partial<MenuItem>) => {
+    setNewMenuItemState(prev => ({ ...prev, ...updates }))
+  }
+  const setNewDepreciationItem = (updates: Partial<DepreciationItem>) => {
+    setNewDepreciationItemState(prev => ({ ...prev, ...updates }))
+  }
+  const setNewMarketingCost = (updates: Partial<MarketingCost>) => {
+    setNewMarketingCostState(prev => ({ ...prev, ...updates }))
+  }
 
   const handleSaveAll = useCallback(async () => {
     try {
@@ -78,11 +117,12 @@ export default function RestaurantBEPCalculator() {
     async function fetchLatest() {
       try {
         const data = await loadLatestBEPData()
+        console.log("Supabase data:", data)
         if (data) {
           setRestaurantName(data.restaurantName)
-          setCategories(data.categories ?? [])
-          setDepreciationItems(data.depreciationItems ?? [])
-          setMarketingCosts(data.marketingCosts ?? [])
+          setCategories(Array.isArray(data.categories) ? data.categories : [])
+          setDepreciationItems(Array.isArray(data.depreciationItems) ? data.depreciationItems : [])
+          setMarketingCosts(Array.isArray(data.marketingCosts) ? data.marketingCosts : [])
           setLastSavedAt(new Date(data.savedAt || data.updatedAt))
         }
       } catch (error) {
@@ -183,6 +223,12 @@ export default function RestaurantBEPCalculator() {
           <MenuManagement
             categories={categories}
             onCategoriesChange={setCategories}
+            newMenuItem={newMenuItem}
+            isAddingNewItem={isAddingNewItem}
+            editingItem={editingItem}
+            setNewMenuItem={setNewMenuItem}
+            setIsAddingNewItem={setIsAddingNewItem}
+            setEditingItem={setEditingItem}
           />
         </TabsContent>
 
@@ -192,6 +238,18 @@ export default function RestaurantBEPCalculator() {
             marketingCosts={marketingCosts}
             onDepreciationItemsChange={setDepreciationItems}
             onMarketingCostsChange={setMarketingCosts}
+            newDepreciationItem={newDepreciationItem}
+            newMarketingCost={newMarketingCost}
+            isAddingDepreciation={isAddingDepreciation}
+            isAddingMarketing={isAddingMarketing}
+            editingDepreciation={editingDepreciation}
+            editingMarketing={editingMarketing}
+            setNewDepreciationItem={setNewDepreciationItem}
+            setNewMarketingCost={setNewMarketingCost}
+            setIsAddingDepreciation={setIsAddingDepreciation}
+            setIsAddingMarketing={setIsAddingMarketing}
+            setEditingDepreciation={setEditingDepreciation}
+            setEditingMarketing={setEditingMarketing}
           />
         </TabsContent>
 

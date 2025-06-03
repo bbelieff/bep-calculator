@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCostManagement } from '@/hooks/useCostManagement';
 import { DepreciationItem, MarketingCost } from '@/types/cost';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -11,6 +10,18 @@ interface CostManagementProps {
   marketingCosts: MarketingCost[];
   onDepreciationItemsChange: (items: DepreciationItem[]) => void;
   onMarketingCostsChange: (costs: MarketingCost[]) => void;
+  newDepreciationItem: DepreciationItem;
+  newMarketingCost: MarketingCost;
+  isAddingDepreciation: boolean;
+  isAddingMarketing: boolean;
+  editingDepreciation: DepreciationItem | null;
+  editingMarketing: MarketingCost | null;
+  setNewDepreciationItem: (item: Partial<DepreciationItem>) => void;
+  setNewMarketingCost: (item: Partial<MarketingCost>) => void;
+  setIsAddingDepreciation: (isAdding: boolean) => void;
+  setIsAddingMarketing: (isAdding: boolean) => void;
+  setEditingDepreciation: (item: DepreciationItem | null) => void;
+  setEditingMarketing: (item: MarketingCost | null) => void;
 }
 
 export const CostManagement: React.FC<CostManagementProps> = ({
@@ -18,46 +29,32 @@ export const CostManagement: React.FC<CostManagementProps> = ({
   marketingCosts,
   onDepreciationItemsChange,
   onMarketingCostsChange,
+  newDepreciationItem,
+  newMarketingCost,
+  isAddingDepreciation,
+  isAddingMarketing,
+  editingDepreciation,
+  editingMarketing,
+  setNewDepreciationItem,
+  setNewMarketingCost,
+  setIsAddingDepreciation,
+  setIsAddingMarketing,
+  setEditingDepreciation,
+  setEditingMarketing,
 }) => {
-  const {
-    newDepreciationItem,
-    newMarketingCost,
-    isAddingDepreciation,
-    isAddingMarketing,
-    editingDepreciation,
-    editingMarketing,
-    addDepreciationItem,
-    updateDepreciationItem,
-    deleteDepreciationItem,
-    addMarketingCost,
-    updateMarketingCost,
-    deleteMarketingCost,
-    setEditingDepreciation,
-    setEditingMarketing,
-    setAddingDepreciation,
-    setAddingMarketing,
-    updateNewDepreciationItem,
-    updateNewMarketingCost,
-  } = useCostManagement(depreciationItems, marketingCosts);
-
   const handleAddDepreciation = () => {
     if (!newDepreciationItem.name) return;
     const item: DepreciationItem = {
       ...newDepreciationItem,
       id: crypto.randomUUID(),
     };
-    addDepreciationItem(item);
-    onDepreciationItemsChange(depreciationItems);
-  };
-
-  const handleUpdateDepreciation = (item: DepreciationItem) => {
-    updateDepreciationItem(item);
-    onDepreciationItemsChange(depreciationItems);
+    onDepreciationItemsChange([...depreciationItems, item]);
+    setIsAddingDepreciation(false);
+    setNewDepreciationItem({ name: '', amount: 0, months: 0, startDate: new Date().toISOString().split('T')[0] });
   };
 
   const handleDeleteDepreciation = (id: string) => {
-    deleteDepreciationItem(id);
-    onDepreciationItemsChange(depreciationItems);
+    onDepreciationItemsChange(depreciationItems.filter(item => item.id !== id));
   };
 
   const handleAddMarketing = () => {
@@ -66,18 +63,13 @@ export const CostManagement: React.FC<CostManagementProps> = ({
       ...newMarketingCost,
       id: crypto.randomUUID(),
     };
-    addMarketingCost(item);
-    onMarketingCostsChange(marketingCosts);
-  };
-
-  const handleUpdateMarketing = (item: MarketingCost) => {
-    updateMarketingCost(item);
-    onMarketingCostsChange(marketingCosts);
+    onMarketingCostsChange([...marketingCosts, item]);
+    setIsAddingMarketing(false);
+    setNewMarketingCost({ name: '', amount: 0, months: 0, startDate: new Date().toISOString().split('T')[0] });
   };
 
   const handleDeleteMarketing = (id: string) => {
-    deleteMarketingCost(id);
-    onMarketingCostsChange(marketingCosts);
+    onMarketingCostsChange(marketingCosts.filter(item => item.id !== id));
   };
 
   return (
@@ -124,44 +116,30 @@ export const CostManagement: React.FC<CostManagementProps> = ({
                 <Input
                   placeholder="항목 이름"
                   value={newDepreciationItem.name}
-                  onChange={e =>
-                    updateNewDepreciationItem({ name: e.target.value })
-                  }
+                  onChange={e => setNewDepreciationItem({ name: e.target.value })}
                 />
                 <Input
                   type="number"
                   placeholder="금액"
                   value={newDepreciationItem.amount}
-                  onChange={e =>
-                    updateNewDepreciationItem({
-                      amount: Number(e.target.value),
-                    })
-                  }
+                  onChange={e => setNewDepreciationItem({ amount: Number(e.target.value) })}
                 />
                 <Input
                   type="number"
                   placeholder="기간 (개월)"
                   value={newDepreciationItem.months}
-                  onChange={e =>
-                    updateNewDepreciationItem({
-                      months: Number(e.target.value),
-                    })
-                  }
+                  onChange={e => setNewDepreciationItem({ months: Number(e.target.value) })}
                 />
                 <Input
                   type="date"
                   value={newDepreciationItem.startDate}
-                  onChange={e =>
-                    updateNewDepreciationItem({
-                      startDate: e.target.value,
-                    })
-                  }
+                  onChange={e => setNewDepreciationItem({ startDate: e.target.value })}
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleAddDepreciation}>추가</Button>
                   <Button
                     variant="outline"
-                    onClick={() => setAddingDepreciation(false)}
+                    onClick={() => setIsAddingDepreciation(false)}
                   >
                     취소
                   </Button>
@@ -170,7 +148,7 @@ export const CostManagement: React.FC<CostManagementProps> = ({
             )}
 
             {!isAddingDepreciation && (
-              <Button onClick={() => setAddingDepreciation(true)}>
+              <Button onClick={() => setIsAddingDepreciation(true)}>
                 새 감가상각 항목 추가
               </Button>
             )}
@@ -220,44 +198,30 @@ export const CostManagement: React.FC<CostManagementProps> = ({
                 <Input
                   placeholder="항목 이름"
                   value={newMarketingCost.name}
-                  onChange={e =>
-                    updateNewMarketingCost({ name: e.target.value })
-                  }
+                  onChange={e => setNewMarketingCost({ name: e.target.value })}
                 />
                 <Input
                   type="number"
                   placeholder="금액"
                   value={newMarketingCost.amount}
-                  onChange={e =>
-                    updateNewMarketingCost({
-                      amount: Number(e.target.value),
-                    })
-                  }
+                  onChange={e => setNewMarketingCost({ amount: Number(e.target.value) })}
                 />
                 <Input
                   type="number"
                   placeholder="기간 (개월)"
                   value={newMarketingCost.months}
-                  onChange={e =>
-                    updateNewMarketingCost({
-                      months: Number(e.target.value),
-                    })
-                  }
+                  onChange={e => setNewMarketingCost({ months: Number(e.target.value) })}
                 />
                 <Input
                   type="date"
                   value={newMarketingCost.startDate}
-                  onChange={e =>
-                    updateNewMarketingCost({
-                      startDate: e.target.value,
-                    })
-                  }
+                  onChange={e => setNewMarketingCost({ startDate: e.target.value })}
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleAddMarketing}>추가</Button>
                   <Button
                     variant="outline"
-                    onClick={() => setAddingMarketing(false)}
+                    onClick={() => setIsAddingMarketing(false)}
                   >
                     취소
                   </Button>
@@ -266,7 +230,7 @@ export const CostManagement: React.FC<CostManagementProps> = ({
             )}
 
             {!isAddingMarketing && (
-              <Button onClick={() => setAddingMarketing(true)}>
+              <Button onClick={() => setIsAddingMarketing(true)}>
                 새 마케팅 비용 추가
               </Button>
             )}

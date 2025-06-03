@@ -2,51 +2,53 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMenuManagement } from '@/hooks/useMenuManagement';
 import { MenuItem, MenuCategory } from '@/types/menu';
 import { formatCurrency } from '@/utils/formatters';
 
 interface MenuManagementProps {
   categories: MenuCategory[];
   onCategoriesChange: (categories: MenuCategory[]) => void;
+  newMenuItem: MenuItem;
+  isAddingNewItem: boolean;
+  editingItem: MenuItem | null;
+  setNewMenuItem: (item: Partial<MenuItem>) => void;
+  setIsAddingNewItem: (isAdding: boolean) => void;
+  setEditingItem: (item: MenuItem | null) => void;
 }
 
 export const MenuManagement: React.FC<MenuManagementProps> = ({
   categories,
   onCategoriesChange,
+  newMenuItem,
+  isAddingNewItem,
+  editingItem,
+  setNewMenuItem,
+  setIsAddingNewItem,
+  setEditingItem,
 }) => {
-  const {
-    newMenuItem,
-    isAddingNewItem,
-    selectedCategory,
-    editingItem,
-    addMenuItem,
-    updateMenuItem,
-    deleteMenuItem,
-    setEditingItem,
-    setAddingNewItem,
-    setSelectedCategory,
-    updateNewMenuItem,
-  } = useMenuManagement(categories);
-
   const handleAddItem = () => {
     if (!newMenuItem.name || !newMenuItem.category) return;
     const item: MenuItem = {
       ...newMenuItem,
       id: crypto.randomUUID(),
     };
-    addMenuItem(item);
-    onCategoriesChange(categories);
-  };
-
-  const handleUpdateItem = (item: MenuItem) => {
-    updateMenuItem(item);
-    onCategoriesChange(categories);
+    const updatedCategories = categories.map(category =>
+      category.id === item.category
+        ? { ...category, items: [...category.items, item] }
+        : category
+    );
+    onCategoriesChange(updatedCategories);
+    setIsAddingNewItem(false);
+    setNewMenuItem({ name: '', price: 0, cost: 0, quantity: 0, category: '' });
   };
 
   const handleDeleteItem = (itemId: string, categoryId: string) => {
-    deleteMenuItem(itemId, categoryId);
-    onCategoriesChange(categories);
+    const updatedCategories = categories.map(category =>
+      category.id === categoryId
+        ? { ...category, items: category.items.filter(item => item.id !== itemId) }
+        : category
+    );
+    onCategoriesChange(updatedCategories);
   };
 
   return (
@@ -99,39 +101,29 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
               <Input
                 placeholder="메뉴 이름"
                 value={newMenuItem.name}
-                onChange={e =>
-                  updateNewMenuItem({ name: e.target.value })
-                }
+                onChange={e => setNewMenuItem({ name: e.target.value })}
               />
               <Input
                 type="number"
                 placeholder="가격"
                 value={newMenuItem.price}
-                onChange={e =>
-                  updateNewMenuItem({ price: Number(e.target.value) })
-                }
+                onChange={e => setNewMenuItem({ price: Number(e.target.value) })}
               />
               <Input
                 type="number"
                 placeholder="원가"
                 value={newMenuItem.cost}
-                onChange={e =>
-                  updateNewMenuItem({ cost: Number(e.target.value) })
-                }
+                onChange={e => setNewMenuItem({ cost: Number(e.target.value) })}
               />
               <Input
                 type="number"
                 placeholder="수량"
                 value={newMenuItem.quantity}
-                onChange={e =>
-                  updateNewMenuItem({ quantity: Number(e.target.value) })
-                }
+                onChange={e => setNewMenuItem({ quantity: Number(e.target.value) })}
               />
               <select
                 value={newMenuItem.category}
-                onChange={e =>
-                  updateNewMenuItem({ category: e.target.value })
-                }
+                onChange={e => setNewMenuItem({ category: e.target.value })}
                 className="w-full p-2 border rounded"
               >
                 <option value="">카테고리 선택</option>
@@ -145,7 +137,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
                 <Button onClick={handleAddItem}>추가</Button>
                 <Button
                   variant="outline"
-                  onClick={() => setAddingNewItem(false)}
+                  onClick={() => setIsAddingNewItem(false)}
                 >
                   취소
                 </Button>
@@ -154,7 +146,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
           )}
 
           {!isAddingNewItem && (
-            <Button onClick={() => setAddingNewItem(true)}>
+            <Button onClick={() => setIsAddingNewItem(true)}>
               새 메뉴 추가
             </Button>
           )}

@@ -25,7 +25,7 @@ interface MenuItem {
   discountEnabled: boolean
   discountDays: string[]
   discountType: "rate" | "amount"
-  discountRate: number
+  discountRate: string | number
   discountAmount: number
 }
 
@@ -282,7 +282,10 @@ export default function RestaurantBEPCalculator() {
   const [dragOverItemIndex, setDragOverItemIndex] = useState<number | null>(null)
   const [bulkMarginRate, setBulkMarginRate] = useState<string>("")
 
-  const parseInputAsNumber = (value: string): number => Number.parseFloat(value.replace(/,/g, "")) || 0
+  const parseInputAsNumber = (value: string | number): number => {
+    if (typeof value === 'number') return value;
+    return Number.parseFloat(value.replace(/,/g, "")) || 0;
+  }
   const formatNumberForDisplay = (
     value: number | string | undefined,
     unit: "천원" | "원" | "만원" | "%" = "원",
@@ -432,10 +435,11 @@ export default function RestaurantBEPCalculator() {
 
   const calculateCostAndMargin = useCallback(
     (
-      item: Omit<MenuItem, "id" | "margin" | "price" | "cost" | "discountAmount"> & {
+      item: Omit<MenuItem, "id" | "margin" | "price" | "cost" | "discountAmount" | "costRate"> & {
         price: string
         cost: string
         discountAmount: string
+        costRate: string
       },
       newPriceValue?: number,
       newCostAmountValue?: number,
@@ -914,13 +918,12 @@ export default function RestaurantBEPCalculator() {
   }, [marketingCosts])
 
   const getDiscountedPrice = (menu: MenuItem, dateForDiscount?: Date): number => {
-    const targetDate = dateForDiscount || selectedDate
-    if (!menu.discountEnabled || !targetDate) return menu.price
-    const dayNames = ["일", "월", "화", "수", "목", "금", "토"]
-    const currentDay = dayNames[targetDate.getDay()]
+    if (!menu.discountEnabled) return menu.price
+    const currentDay = format(dateForDiscount || new Date(), "EEEE", { locale: ko })
     if (menu.discountDays.includes(currentDay)) {
       if (menu.discountType === "rate") {
-        return menu.price * (1 - menu.discountRate / 100)
+        const discountRate = typeof menu.discountRate === 'string' ? parseInputAsNumber(menu.discountRate) : menu.discountRate
+        return menu.price * (1 - discountRate / 100)
       } else {
         return Math.max(0, menu.price - menu.discountAmount)
       }
@@ -1375,9 +1378,13 @@ export default function RestaurantBEPCalculator() {
   }
 
   const applyBulkMargin = () => {
+    if (!bulkMarginRate) {
+      alert("마진율을 입력해주세요.")
+      return
+    }
     const marginRate = parseInputAsNumber(bulkMarginRate)
-    if (marginRate <= 0 || marginRate > 100) {
-      alert("마진율은 0~100 사이의 값으로 입력해주세요.")
+    if (isNaN(marginRate) || marginRate < 0 || marginRate > 100) {
+      alert("0-100 사이의 마진율을 입력해주세요.")
       return
     }
     const updatedMenuItems = menuItems.map((item) => {
@@ -1385,7 +1392,7 @@ export default function RestaurantBEPCalculator() {
       return {
         ...item,
         cost: Number.parseFloat(newCost.toFixed(2)),
-        costInputType: "amount",
+        costInputType: "amount" as const,
         costRate: item.price > 0 ? Number.parseFloat(((newCost / item.price) * 100).toFixed(2)) : 0,
         margin: marginRate,
       }
@@ -2107,7 +2114,7 @@ export default function RestaurantBEPCalculator() {
                                 (categoryConfig && isDefaultRemovable && categoryConfig.key !== "depreciation")) && (
                                 <Button
                                   variant="ghost"
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => removeFixedCategory(categoryKey)}
                                   className="text-red-500 p-1 h-auto"
                                 >
@@ -2321,7 +2328,7 @@ export default function RestaurantBEPCalculator() {
                               {(isCustomRemovable || (categoryConfig && isDefaultRemovable)) && (
                                 <Button
                                   variant="ghost"
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => removeVariableCategory(categoryKey)}
                                   className="text-red-500 p-1 h-auto"
                                 >

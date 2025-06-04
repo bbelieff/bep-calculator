@@ -68,6 +68,15 @@ export default function RestaurantBEPCalculator() {
   const [editingDepreciation, setEditingDepreciation] = useState<DepreciationItem | null>(null)
   const [editingMarketing, setEditingMarketing] = useState<MarketingCost | null>(null)
 
+  const [fixedCosts, setFixedCosts] = useState<any>({})
+  const [variableCosts, setVariableCosts] = useState<any>({})
+  const [dailySales, setDailySales] = useState<any[]>([])
+  const [operatingDays, setOperatingDays] = useState<number>(26)
+  const [targetGoals, setTargetGoals] = useState<any>({ targetProfit: 0, targetRevenue: 0 })
+  const [customVariableCategories, setCustomVariableCategories] = useState<string[]>([])
+  const [customFixedCategories, setCustomFixedCategories] = useState<string[]>([])
+  const [vatSettings, setVatSettings] = useState<any>({ enabled: true, rate: 10, autoCalculate: true })
+
   const setNewMenuItem = (updates: Partial<MenuItem>) => {
     setNewMenuItemState(prev => ({ ...prev, ...updates }))
   }
@@ -86,6 +95,14 @@ export default function RestaurantBEPCalculator() {
           categories,
           depreciationItems,
           marketingCosts,
+          fixedCosts,
+          variableCosts,
+          dailySales,
+          operatingDays,
+          targetGoals,
+          customVariableCategories,
+          customFixedCategories,
+          vatSettings,
         }
       )
       setLastSavedAt(new Date())
@@ -109,7 +126,7 @@ export default function RestaurantBEPCalculator() {
         ...prev,
       ])
     }
-  }, [restaurantName, categories, depreciationItems, marketingCosts])
+  }, [restaurantName, categories, depreciationItems, marketingCosts, fixedCosts, variableCosts, dailySales, operatingDays, targetGoals, customVariableCategories, customFixedCategories, vatSettings])
 
   const debouncedSave = useCallback(debounce(handleSaveAll, 60000), [handleSaveAll])
 
@@ -119,32 +136,25 @@ export default function RestaurantBEPCalculator() {
         const data = await loadLatestBEPData()
         console.log("Supabase data:", data)
         if (data) {
+          const categories = Array.isArray(data.data?.categories) ? data.data.categories : Array.isArray(data.categories) ? data.categories : []
+          const depreciationItems = Array.isArray(data.data?.depreciationItems) ? data.data.depreciationItems : Array.isArray(data.depreciationItems) ? data.depreciationItems : []
+          const marketingCosts = Array.isArray(data.data?.marketingCosts) ? data.data.marketingCosts : Array.isArray(data.marketingCosts) ? data.marketingCosts : []
+          setCategories(categories)
+          setDepreciationItems(depreciationItems)
+          setMarketingCosts(marketingCosts)
+          setFixedCosts(data.data?.fixedCosts || {})
+          setVariableCosts(data.data?.variableCosts || {})
+          setDailySales(data.data?.dailySales || [])
+          setOperatingDays(data.data?.operatingDays || 26)
+          setTargetGoals(data.data?.targetGoals || { targetProfit: 0, targetRevenue: 0 })
+          setCustomVariableCategories(data.data?.customVariableCategories || [])
+          setCustomFixedCategories(data.data?.customFixedCategories || [])
+          setVatSettings(data.data?.vatSettings || { enabled: true, rate: 10, autoCalculate: true })
           setRestaurantName(
             (data.data && (data.data.restaurantName || data.data.name)) ||
             data.restaurantName ||
             data.name ||
             "식당 BEP 계산기"
-          )
-          setCategories(
-            Array.isArray(data.data?.categories)
-              ? data.data.categories
-              : Array.isArray(data.categories)
-              ? data.categories
-              : []
-          )
-          setDepreciationItems(
-            Array.isArray(data.data?.depreciationItems)
-              ? data.data.depreciationItems
-              : Array.isArray(data.depreciationItems)
-              ? data.depreciationItems
-              : []
-          )
-          setMarketingCosts(
-            Array.isArray(data.data?.marketingCosts)
-              ? data.data.marketingCosts
-              : Array.isArray(data.marketingCosts)
-              ? data.marketingCosts
-              : []
           )
           let lastSaved = null;
           const innerData = data.data || {};
@@ -180,7 +190,7 @@ export default function RestaurantBEPCalculator() {
 
   useEffect(() => {
     debouncedSave()
-  }, [debouncedSave, restaurantName, categories, depreciationItems, marketingCosts])
+  }, [debouncedSave, restaurantName, categories, depreciationItems, marketingCosts, fixedCosts, variableCosts, dailySales, operatingDays, targetGoals, customVariableCategories, customFixedCategories, vatSettings])
 
   const handleRestaurantNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRestaurantName(e.target.value)
@@ -254,6 +264,10 @@ export default function RestaurantBEPCalculator() {
         <TabsList>
           <TabsTrigger value="menu">메뉴 관리</TabsTrigger>
           <TabsTrigger value="costs">비용 관리</TabsTrigger>
+          <TabsTrigger value="fixed">고정비 관리</TabsTrigger>
+          <TabsTrigger value="variable">변동비 관리</TabsTrigger>
+          <TabsTrigger value="daily">일일 매출</TabsTrigger>
+          <TabsTrigger value="bep">BEP 계산</TabsTrigger>
           <TabsTrigger value="analysis">분석</TabsTrigger>
         </TabsList>
 
@@ -289,6 +303,22 @@ export default function RestaurantBEPCalculator() {
             setEditingDepreciation={setEditingDepreciation}
             setEditingMarketing={setEditingMarketing}
           />
+        </TabsContent>
+
+        <TabsContent value="fixed">
+          <div>고정비 관리 UI (예전 구조 참고, 입력/수정/삭제/합계 등)</div>
+        </TabsContent>
+
+        <TabsContent value="variable">
+          <div>변동비 관리 UI (예전 구조 참고, 입력/수정/삭제/합계 등)</div>
+        </TabsContent>
+
+        <TabsContent value="daily">
+          <div>일일 매출 UI (예전 구조 참고, 입력/수정/분석 등)</div>
+        </TabsContent>
+
+        <TabsContent value="bep">
+          <div>BEP 계산 UI (예전 구조 참고, 계산/분석 등)</div>
         </TabsContent>
 
         <TabsContent value="analysis">
